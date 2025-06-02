@@ -25,7 +25,7 @@ def formatar_horario_mysql(time_value):
         return str(time_value)
 
 # Configuração do Banco de Dados (agora compatível com Docker)
-app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST', 'localhost')
+app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST', 'db')
 app.config['MYSQL_USER'] = os.environ.get('MYSQL_USER', 'Danilo')
 app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD', 'D@n153218')
 app.config['MYSQL_DB'] = os.environ.get('MYSQL_DATABASE', 'crud_flask')

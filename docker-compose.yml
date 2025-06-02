@@ -24,6 +24,7 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_DB: ${MYSQL_DATABASE}
+      MYSQL_PORT: 3306
     depends_on:
       - db
     volumes:
