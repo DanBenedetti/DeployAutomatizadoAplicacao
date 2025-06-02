@@ -1,0 +1,21 @@
+Ignore virtual environments
+
+venv/
+
+.env
+
+pycache/
+
+*.pyc
+
+*.pyo
+
+Docker volumes
+
+db_data/
+
+.docker/
+
+docker*.log
+
+.vscode/

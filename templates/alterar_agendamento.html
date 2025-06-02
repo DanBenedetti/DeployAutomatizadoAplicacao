@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Alterar Agendamento</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">
+</head>
+<body>
+    <h2>Alterar Agendamento</h2>
+    <form method="post">
+        <label>Serviço:</label>
+        <select name="servico" required>
+            <option value="Corte" {% if servico_atual == 'Corte' %}selected{% endif %}>Corte</option>
+            <option value="Barba" {% if servico_atual == 'Barba' %}selected{% endif %}>Barba</option>
+            <option value="Corte + Barba" {% if servico_atual == 'Corte + Barba' %}selected{% endif %}>Corte + Barba</option>
+            <option value="Sobrancelha" {% if servico_atual == 'Sobrancelha' %}selected{% endif %}>Sobrancelha</option>
+        </select>
+        <br><br>
+        <label>Data:</label>
+        <input type="date" name="data" value="{{ data_atual }}" required min="{{ min_date }}">
+        <br><br>
+        <label>Horário:</label>
+        <select name="horario" required>
+            {% for h in horarios_disponiveis %}
+                <option value="{{ h }}" {% if h == horario_atual %}selected{% endif %}>{{ h }}</option>
+            {% endfor %}
+        </select>
+        <br><br>
+        <button type="submit">Salvar Alteração</button>
+        <a href="{{ url_for('painel_cliente') }}">Cancelar</a>
+    </form>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Barbearia Elite | Sua aparência, nossa arte</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Barbearia Elite</h1>
+        <p>Sua aparência, nossa arte!</p>
+    </header>
+    <nav>
+        <a href="{{ url_for('cadastro_cliente') }}">Cadastro</a>
+        <a href="{{ url_for('login') }}">Entrar</a>
+    </nav>
+    <div class="container">
+        <h2>Bem-vindo à Barbearia Elite</h2>
+        <p>
+            Uma nova experiência de cuidado masculino no coração da cidade de Franca-SP.<br>
+            Profissionais qualificados, ambiente confortável e atendimento personalizado, pensando no seu bem-estar e na sua imagem.<br>
+            <b>Agende agora o seu horário!</b>
+        </p>
+        <div class="servicos">
+            <h3>Nossos Serviços</h3>
+            <div class="servico-item"><strong>✂️ Corte de Cabelo Masculino</strong><br>Estilo, precisão e tradição — como você merece.</div>
+            <div class="servico-item"><strong>🧔 Corte de Barba</strong><br>Modelagem, alinhamento e finalização perfeita.</div>
+        </div>
+        <div class="horario">
+            <h3>Horário de Funcionamento</h3>
+            <ul>
+                <li>Segunda a Sexta: <strong>10:00</strong> às <strong>18:00</strong></li>
+                <li>Sábado: <strong>08:00</strong> às <strong>14:00</strong></li>
+                <li>Domingos e feriados: Fechado</li>
+            </ul>
+        </div>
+        <div class="contato">
+            <h3>Contato & Endereço</h3>
+            <p>
+                Tel/WhatsApp: <a href="tel:16999999999">(16) 99999-9999</a><br>
+                Rua dos Homens, 77 – Centro – Franca/SP<br>
+                Siga nas redes: <a href="#">@barbeariaelite</a>
+            </p>
+        </div>
+    </div>
+    <footer>
+        &copy; {{2025}} Barbearia Elite · Todos os direitos reservados
+    </footer>
+</body>
+</html>

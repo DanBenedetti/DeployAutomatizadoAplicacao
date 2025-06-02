@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Agendamento | Barbearia Elite</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Barbearia Elite</h1>
+    </header>
+    <nav>
+        <a href="{{ url_for('painel_cliente') }}">Painel</a>
+        <a href="{{ url_for('logout') }}">Sair</a>
+    </nav>
+    <div class="container">
+        <h2>Agendar Serviço</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div style="color: {% if category == 'success' %}green{% else %}red{% endif %};">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        <form method="post">
+            <label for="servico">Serviço:</label><br>
+            <select name="servico" id="servico" required>
+                <option value="">Selecione</option>
+                <option value="Cabelo" {% if servico_selecionado == 'Cabelo' %}selected{% endif %}>Cabelo</option>
+                <option value="Barba" {% if servico_selecionado == 'Barba' %}selected{% endif %}>Barba</option>
+            </select><br><br>
+
+            <label for="data">Data:</label><br>
+            <input type="date" id="data" name="data" required min="{{ min_date }}" value="{{ data_selecionada or min_date }}"><br><br>
+
+            <label for="horario">Horário:</label><br>
+            <select name="horario" id="horario" required>
+                <option value="">Selecione</option>
+                {% for hora in horarios_disponiveis %}
+                    <option value="{{ hora }}" {% if hora == horario_selecionado %}selected{% endif %}>{{ hora }}</option>
+                {% endfor %}
+            </select><br><br>
+
+            <button type="submit" class="btn">Agendar</button>
+        </form>
+    </div>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let dataInput = document.getElementById('data');
+        let horarioSelect = document.getElementById('horario');
+        // Quando o usuário escolher outro dia:
+        dataInput.addEventListener('change', function() {
+            let dataSelecionada = this.value;
+            horarioSelect.innerHTML = '<option>Carregando...</option>';
+            if (dataSelecionada) {
+                fetch("{{ url_for('horarios_disponiveis') }}?data=" + dataSelecionada)
+                .then(response => response.json())
+                .then(function(data) {
+                    horarioSelect.innerHTML = '';
+                    if(data.horarios.length === 0) {
+                        horarioSelect.innerHTML = '<option value="">Nenhum horário disponível</option>';
+                    } else {
+                        horarioSelect.innerHTML = '<option value="">Selecione</option>';
+                        data.horarios.forEach(function(h){
+                            let opt = document.createElement('option');
+                            opt.value = h;
+                            opt.textContent = h;
+                            horarioSelect.appendChild(opt);
+                        });
+                    }
+                });
+            }
+        });
+        // Já dispara AJAX ao entrar (no dia pré-selecionado)
+        if(dataInput.value){
+            let event = new Event('change');
+            dataInput.dispatchEvent(event);
+        }
+    });
+    </script>
+</body>
+</html>

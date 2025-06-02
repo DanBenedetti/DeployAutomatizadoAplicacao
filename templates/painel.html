@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel do Cliente | Barbearia Elite</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+    table.agenda { border-collapse: collapse; width: 100%; margin-top:20px }
+    table.agenda td, table.agenda th { border:1px solid #aaa;padding:7px }
+    table.agenda th { background:#eee }
+    a.icone { text-decoration:none; padding:0 4px }
+    a.icone:hover { background: #fafafa; border-radius: 4px;}
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Barbearia Elite</h1>
+        <p>Bem-vindo(a), {{ nome }}!</p>
+    </header>
+    <nav>
+        <a href="{{ url_for('agendamento') }}">Agendar Serviço</a>
+        <a href="{{ url_for('logout') }}">Sair</a>
+    </nav>
+    <!-- Bloco das mensagens flash, ADICIONE AQUI -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div style="color: {% if category == 'success' %}green{% else %}red{% endif %};">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <div class="container">
+
+        <h3>Meus Agendamentos</h3>
+        {% if agendamentos %}
+        <table class="agenda">
+            <tr>
+                <th>Serviço</th>
+                <th>Data</th>
+                <th>Horário</th>
+                <th>Ações</th>
+            </tr>
+            {% for ag in agendamentos %}
+            <tr>
+                <td>{{ ag['servico'] }}</td>
+                <td>{{ ag['data'] }}</td>
+                <td>{{ ag['horario'] }}</td>
+                <td>
+                    <a href="{{ url_for('alterar_agendamento', id=ag['id']) }}" class="icone" title="Alterar"><span>✏️</span></a>
+                    <a href="{{ url_for('excluir_agendamento', id=ag['id']) }}" class="icone" title="Excluir" onclick="return confirm('Deseja excluir este agendamento?');"><span>🗑️</span></a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p>Nenhum serviço agendado.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
