@@ -18,7 +18,7 @@ services:
   web:
     build: .
     ports:
-      - "5000:5000"
+      - "8086:5000"
     environment:
       MYSQL_HOST: db
       MYSQL_USER: ${MYSQL_USER}

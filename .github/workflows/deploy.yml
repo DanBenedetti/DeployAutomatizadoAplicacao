@@ -1,0 +1,72 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main # ou a branch que quiser monitorar para deploy
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=30s
+          --health-timeout=10s
+          --health-retries=5
+        # Mapeia um volume persistente e aleatório, para não manter os dados no repositório
+        volumes:
+          - db_data:${{ github.run_id }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v1
+
+    - name: Build Docker image
+      run: |
+        docker build -t danilobenedetti/app_crud_flask:latest .
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Push Docker image
+      run: |
+        docker push danilobenedetti/app_crud_flask:latest
+
+    - name: SSH to server and deploy
+      uses: appleboy/scp-action@v0.1.0
+      with:
+        host: 201.23.3.86
+        username: seusuario
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        source: "docker-compose.yml"
+        target: "/caminho/do/seu/servidor"
+
+    - name: SSH to server and run deployment
+      uses: appleboy/ssh-action@v0.1.0
+      with:
+        host: 201.23.3.86
+        username: seusuario
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          cd /caminho/do/seu/servidor
+          docker-compose down
+          docker-compose up -d
