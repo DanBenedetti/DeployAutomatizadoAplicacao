@@ -51,8 +51,8 @@ Clone o repositório
 bash
 Copiar
 
-git clone https://github.com/seuusuario/nome-repo.git
-cd nome-repo
+git clone https://github.com/DanBenedetti/DeployAutomatizadoAplicacao.git
+cd DeployAutomatizadoAplicacao
 
 Configure variáveis de ambiente
 
@@ -109,7 +109,7 @@ Deploy: envio do docker-compose.yml e reload das imagens
 
 🖥️ Acesso no Servidor
 
-    App Flask: acessível via http://<IP_serv>:8086
+    App Flask: acessível via http://201.23.3.86:8086
 
     MySQL: acesso no host/server via porta 8087
 
@@ -149,5 +149,3 @@ Copiar
 Em caso de dúvidas, sugestões ou problemas, abra uma issue ou entre em contato!
 
 2025 © Danilo Benedetti
-
-Se quiser personalizar ainda mais esse modelo, adicionar prints, fluxogramas ou exemplos completos de env/config conforme ambiente, só avisar!
