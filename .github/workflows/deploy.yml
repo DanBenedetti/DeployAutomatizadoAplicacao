@@ -49,7 +49,7 @@ jobs:
 
       - name: Subir SonarQube temporário no servidor remoto (com checagem)
         run: |
-          ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 '
+          ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 '
             docker stop sonartmp || true && docker rm sonartmp || true
             docker pull sonarqube:community
             docker run -d --name sonartmp -p 8088:9000 sonarqube:community
@@ -63,7 +63,7 @@ jobs:
 
       - name: Esperar SonarQube inicializar (com log e timeout)
         run: |
-          ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 '
+          ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 '
             TIMEOUT_SEC=400
             INTERVAL=8
             echo "Aguardando SonarQube..."
@@ -93,7 +93,7 @@ jobs:
           sonar-scanner \
             -Dsonar.projectKey=danilo_crud_flask \
             -Dsonar.sources=. \
-            -Dsonar.host.url=http://201.23.3.86:8088 \
+            -Dsonar.host.url=http://13.68.97.186:8088 \
             -Dsonar.login=$SONAR_USER \
             -Dsonar.password=$SONAR_PASS
 
@@ -108,27 +108,27 @@ jobs:
           echo "Aguardando Quality Gate..."
           sleep 10
           for i in {1..30}; do
-            QG=$(curl -u $SONAR_USER:$SONAR_PASS "http://201.23.3.86:8088/api/qualitygates/project_status?projectKey=danilo_crud_flask" | jq -r .projectStatus.status)
+            QG=$(curl -u $SONAR_USER:$SONAR_PASS "http://13.68.97.186:8088/api/qualitygates/project_status?projectKey=danilo_crud_flask" | jq -r .projectStatus.status)
             echo "Quality Gate: $QG"
             if [[ "$QG" == "OK" ]]; then exit 0; fi
             if [[ "$QG" == "ERROR" ]]; then echo "Quality Gate falhou"; exit 1; fi
             sleep 6
           done
           echo "Quality Gate não retornou status OK/ERROR a tempo"
-          ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 'docker logs sonartmp'
+          ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 'docker logs sonartmp'
           exit 1
 
       - name: Parar e remover SonarQube temporário (sempre executa)
         if: always()
         run: |
-          ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 '
+          ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 '
             docker stop sonartmp || true
             docker rm sonartmp || true
           '
 
       - name: Garantir que o diretório de deploy existe
         run: |
-          ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 'mkdir -p /home/danilo/deploy'
+          ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 'mkdir -p /home/danilo/deploy'
 
       - name: Enviar docker-compose.yml por SCP
         run: |
@@ -136,7 +136,7 @@ jobs:
 
       - name: Executar deploy remoto via SSH
         run: |
-          ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 '
+          ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 '
             cd /home/danilo/deploy
             docker-compose down
             docker-compose pull
