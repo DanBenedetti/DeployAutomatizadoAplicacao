@@ -3,7 +3,7 @@ services:
   db:
     image: mysql:8.0
     restart: unless-stopped
-    envfile:
+    env_file:
       - .env
     environment:
       MYSQLROOTPASSWORD: ${MYSQLROOTPASSWORD}
