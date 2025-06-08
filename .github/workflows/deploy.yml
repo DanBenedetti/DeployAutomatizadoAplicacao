@@ -144,8 +144,8 @@ jobs:
       - name: Executar deploy remoto via SSH
         run: |
           ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 '
-            cd /home/danilopi/deploy
-            docker-compose down
-            docker-compose pull
-            docker-compose up -d --build
-          '
+          cd /home/danilopi/deploy
+          docker compose down
+          docker compose pull
+          docker compose up -d --build
+        '
