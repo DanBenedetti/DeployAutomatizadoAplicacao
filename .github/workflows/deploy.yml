@@ -13,7 +13,7 @@ services:
       MYSQL_USER: ${{ secrets.MYSQL_USER }}
       MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
     ports:
-      - 8087:8087
+      - 8087:3306
     options: &gt;-
       --health-cmd="mysqladmin ping -h localhost"
       --health-interval=30s
