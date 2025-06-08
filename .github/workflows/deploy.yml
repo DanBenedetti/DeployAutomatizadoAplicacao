@@ -60,6 +60,9 @@ jobs:
               exit 1
             fi
           '
+      - name: Instalar jq no servidor remoto
+        run: |
+          ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 'sudo apt-get update && sudo apt-get install -y jq'
 
       - name: Esperar SonarQube inicializar completamente via API (com log e timeout)
         env:
