@@ -21,8 +21,6 @@ services:
       --health-interval=30s
       --health-timeout=10s
       --health-retries=5
-    volumes:
-      - db_data:/var/lib/mysql
 
 steps:
   - name: Checkout código fonte
@@ -131,7 +129,3 @@ steps:
         docker-compose pull
         docker-compose up -d --build
       '
-
-# volumes precisa estar na mesma indentação que jobs, se for usar volumes do Docker Compose
-# volumes:
-#   db_data:
