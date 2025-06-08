@@ -25,4 +25,35 @@ jobs:
       - name: Push Docker image
         run: docker push danilobenedetti/app_crud_flask:latest
 
-      # Adicione os steps de SCP e SSH mais para frente, após corrigir o erro de YAML
+      - name: Enviar docker-compose.yml via SCP
+        uses: appleboy/scp-action@v0.1.0
+        with:
+          host: 201.23.3.86
+          username: aluno
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          source: "docker-compose.yml"
+          target: "/home/danilo/deploy/docker-compose.yml"
+
+      - name: Enviar .env via SCP
+        uses: appleboy/scp-action@v0.1.0
+        with:
+          host: 201.23.3.86
+          username: aluno
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          source: ".env"
+          target: "/home/danilo/deploy/.env"
+
+      - name: Executar deploy remoto via SSH
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: 201.23.3.86
+          username: aluno
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd /home/danilo/deploy
+            docker-compose down
+            docker-compose pull
+            docker-compose up -d --build
