@@ -52,7 +52,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 '
             docker stop sonartmp || true && docker rm sonartmp || true
             docker pull sonarqube:community
-            docker run -d --name sonartmp -p 8088:8088 sonarqube:community
+            docker run -d --name sonartmp -p 8088:9000 sonarqube:community
             sleep 10
             if ! docker ps | grep sonartmp; then
               echo "--- Falha ao iniciar SonarQube ---"
