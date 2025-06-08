@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     services:
       db:
         image: mysql:8.0
@@ -19,6 +20,7 @@ jobs:
         ports:
           - 8087:3306
         options: --health-cmd="mysqladmin ping -h localhost" --health-interval=30s --health-timeout=10s --health-retries=5
+
     steps:
       - name: Checkout código fonte
         uses: actions/checkout@v4
@@ -45,22 +47,35 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Subir SonarQube temporário no servidor remoto
+      - name: Subir SonarQube temporário no servidor remoto (com checagem)
         run: |
           ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 '
-            docker pull sonarqube:community &&
-            docker stop sonartmp || true && docker rm sonartmp || true &&
+            docker stop sonartmp || true && docker rm sonartmp || true
+            docker pull sonarqube:community
             docker run -d --name sonartmp -p 8088:8088 sonarqube:community
+            sleep 10
+            if ! docker ps | grep sonartmp; then
+              echo "--- Falha ao iniciar SonarQube ---"
+              docker logs sonartmp || true
+              exit 1
+            fi
           '
 
-      - name: Esperar SonarQube inicializar
+      - name: Esperar SonarQube inicializar (com log e timeout)
         run: |
           ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 '
-            echo "Aguardando SonarQube subir..."
-            for i in {1..40}; do
-              if curl --fail http://localhost:8088/api/system/health | grep -q '"'"Health":"GREEN"'"'; then break; fi
-              sleep 8
+            TIMEOUT_SEC=400
+            INTERVAL=8
+            echo "Aguardando SonarQube..."
+            until curl --fail http://localhost:8088/api/system/health | grep -q '"'"GREEN"'"' || [ $TIMEOUT_SEC -le 0 ]; do
+              sleep $INTERVAL
+              TIMEOUT_SEC=$(( TIMEOUT_SEC-INTERVAL ))
             done
+            if ! curl --fail http://localhost:8088/api/system/health | grep -q '"'"GREEN"'"'; then
+              echo "SonarQube não subiu a tempo! Log:"
+              docker logs sonartmp
+              exit 1
+            fi
             echo "SonarQube pronto!"
           '
 
@@ -100,6 +115,7 @@ jobs:
             sleep 6
           done
           echo "Quality Gate não retornou status OK/ERROR a tempo"
+          ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 'docker logs sonartmp'
           exit 1
 
       - name: Parar e remover SonarQube temporário (sempre executa)
