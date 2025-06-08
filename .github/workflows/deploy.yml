@@ -1,149 +1,144 @@
 name: CI/CD Pipeline
-
 on:
   push:
     branches:
       - main
-
 jobs:
   build:
     runs-on: ubuntu-latest
+services:
+  db:
+    image: mysql:8.0
+    env:
+      MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+      MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+      MYSQL_USER: ${{ secrets.MYSQL_USER }}
+      MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+    ports:
+      - 8087:3306
+    options: --health-cmd="mysqladmin ping -h localhost" --health-interval=30s --health-timeout=10s --health-retries=5
 
-    services:
-      db:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
-          MYSQL_USER: ${{ secrets.MYSQL_USER }}
-          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
-        ports:
-          - 8087:3306
-        options: --health-cmd="mysqladmin ping -h localhost" --health-interval=30s --health-timeout=10s --health-retries=5
+steps:
+  - name: Checkout código fonte
+    uses: actions/checkout@v4
 
-    steps:
-      - name: Checkout código fonte
-        uses: actions/checkout@v4
+  - name: Configurar QEMU (caso build multi-arquitetura)
+    uses: docker/setup-qemu-action@v1
 
-      - name: Configurar QEMU (caso build multi-arquitetura)
-        uses: docker/setup-qemu-action@v1
+  - name: Build Docker image
+    run: |
+      docker build -t danilobenedetti/app_crud_flask:latest .
 
-      - name: Build Docker image
-        run: |
-          docker build -t danilobenedetti/app_crud_flask:latest .
+  - name: Logar no Docker Hub
+    uses: docker/login-action@v2
+    with:
+      username: ${{ secrets.DOCKER_USERNAME }}
+      password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Logar no Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+  - name: Push Docker image para Docker Hub
+    run: |
+      docker push danilobenedetti/app_crud_flask:latest
 
-      - name: Push Docker image para Docker Hub
-        run: |
-          docker push danilobenedetti/app_crud_flask:latest
+  - name: Configura chave SSH no agente
+    uses: webfactory/ssh-agent@v0.9.0
+    with:
+      ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Configura chave SSH no agente
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Subir SonarQube temporário no servidor remoto (com checagem)
-        run: |
-          ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 '
-            docker stop sonartmp || true && docker rm sonartmp || true
-            docker pull sonarqube:community
-            docker run -d --name sonartmp -p 8088:9000 sonarqube:community
-            sleep 10
-            if ! docker ps | grep sonartmp; then
-              echo "--- Falha ao iniciar SonarQube ---"
-              docker logs sonartmp || true
-              exit 1
-            fi
-          '
-
-       - name: Esperar SonarQube inicializar completamente via API (com log e timeout)
-         env:
-          SONAR_USER: admin
-          SONAR_PASS: admin
-         run: |
-          ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 '
-          # Espera robusta via API /api/system/status (necessário jq instalado no servidor remoto)
-          echo "Aguardando SonarQube atingir status 'UP'..."
-          for i in {1..50}; do
-            STATUS=$(curl -s -u "'$SONAR_USER':'$SONAR_PASS'" "http://localhost:8088/api/system/status" | jq -r .status)
-            echo "Status atual: $STATUS"
-            if [ "$STATUS" = "UP" ]; then
-              echo "SonarQube online."
-              exit 0
-            fi
-            sleep 6
-          done
-          echo "SonarQube não subiu a tempo! Log:"
-          docker logs sonartmp
+  - name: Subir SonarQube temporário no servidor remoto (com checagem)
+    run: |
+      ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 '
+        docker stop sonartmp || true && docker rm sonartmp || true
+        docker pull sonarqube:community
+        docker run -d --name sonartmp -p 8088:9000 sonarqube:community
+        sleep 10
+        if ! docker ps | grep sonartmp; then
+          echo "--- Falha ao iniciar SonarQube ---"
+          docker logs sonartmp || true
           exit 1
-        '
-        
-      - name: Instalar SonarScanner CLI
-        run: |
-          curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-          unzip -o sonar-scanner.zip
+        fi
+      '
 
-      - name: Rodar análise SonarScanner apontando para SonarQube remoto
-        env:
-          SONAR_USER: admin
-          SONAR_PASS: admin
-        run: |
-          export PATH="$PWD/sonar-scanner-5.0.1.3006-linux/bin:$PATH"
-          sonar-scanner \
-            -Dsonar.projectKey=danilo_crud_flask \
-            -Dsonar.sources=. \
-            -Dsonar.host.url=http://13.68.97.186:8088 \
-            -Dsonar.login=$SONAR_USER \
-            -Dsonar.password=$SONAR_PASS
+  - name: Esperar SonarQube inicializar completamente via API (com log e timeout)
+    env:
+      SONAR_USER: admin
+      SONAR_PASS: admin
+    run: |
+      ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 '
+        echo "Aguardando SonarQube atingir status 'UP'..."
+        for i in {1..50}; do
+          STATUS=$(curl -s -u "'$SONAR_USER':'$SONAR_PASS'" "http://localhost:8088/api/system/status" | jq -r .status)
+          echo "Status atual: $STATUS"
+          if [ "$STATUS" = "UP" ]; then
+            echo "SonarQube online."
+            exit 0
+          fi
+          sleep 6
+        done
+        echo "SonarQube não subiu a tempo! Log:"
+        docker logs sonartmp
+        exit 1
+      '
 
-      - name: Instalar jq
-        run: sudo apt-get update && sudo apt-get install -y jq
+  - name: Instalar SonarScanner CLI
+    run: |
+      curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+      unzip -o sonar-scanner.zip
 
-      - name: Validar Quality Gate do SonarQube remoto
-        env:
-          SONAR_USER: admin
-          SONAR_PASS: admin
-        run: |
-          echo "Aguardando Quality Gate..."
-          sleep 10
-          for i in {1..30}; do
-            QG=$(curl -u $SONAR_USER:$SONAR_PASS "http://13.68.97.186:8088/api/qualitygates/project_status?projectKey=danilo_crud_flask" | jq -r .projectStatus.status)
-            echo "Quality Gate: $QG"
-            if [[ "$QG" == "OK" ]]; then exit 0; fi
-            if [[ "$QG" == "ERROR" ]]; then echo "Quality Gate falhou"; exit 1; fi
-            sleep 6
-          done
-          echo "Quality Gate não retornou status OK/ERROR a tempo"
-          ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 'docker logs sonartmp'
-          exit 1
+  - name: Rodar análise SonarScanner apontando para SonarQube remoto
+    env:
+      SONAR_USER: admin
+      SONAR_PASS: admin
+    run: |
+      export PATH="$PWD/sonar-scanner-5.0.1.3006-linux/bin:$PATH"
+      sonar-scanner \
+        -Dsonar.projectKey=danilo_crud_flask \
+        -Dsonar.sources=. \
+        -Dsonar.host.url=http://13.68.97.186:8088 \
+        -Dsonar.login=$SONAR_USER \
+        -Dsonar.password=$SONAR_PASS
 
-      - name: Parar e remover SonarQube temporário (sempre executa)
-        if: always()
-        run: |
-          ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 '
-            docker stop sonartmp || true
-            docker rm sonartmp || true
-          '
+  - name: Instalar jq
+    run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Garantir que o diretório de deploy existe
-        run: |
-          ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 'mkdir -p /home/danilo/deploy'
+  - name: Validar Quality Gate do SonarQube remoto
+    env:
+      SONAR_USER: admin
+      SONAR_PASS: admin
+    run: |
+      echo "Aguardando Quality Gate..."
+      sleep 10
+      for i in {1..30}; do
+        QG=$(curl -u $SONAR_USER:$SONAR_PASS "http://13.68.97.186:8088/api/qualitygates/project_status?projectKey=danilo_crud_flask" | jq -r .projectStatus.status)
+        echo "Quality Gate: $QG"
+        if [[ "$QG" == "OK" ]]; then exit 0; fi
+        if [[ "$QG" == "ERROR" ]]; then echo "Quality Gate falhou"; exit 1; fi
+        sleep 6
+      done
+      echo "Quality Gate não retornou status OK/ERROR a tempo"
+      ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 'docker logs sonartmp'
+      exit 1
 
-      - name: Enviar docker-compose.yml por SCP
-        run: |
-          scp -o StrictHostKeyChecking=no docker-compose.yml aluno@201.23.3.86:/home/danilo/deploy/
+  - name: Parar e remover SonarQube temporário (sempre executa)
+    if: always()
+    run: |
+      ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 '
+        docker stop sonartmp || true
+        docker rm sonartmp || true
+      '
 
-      - name: Executar deploy remoto via SSH
-        run: |
-          ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 '
-            cd /home/danilo/deploy
-            docker-compose down
-            docker-compose pull
-            docker-compose up -d --build
-          '
+  - name: Garantir que o diretório de deploy existe
+    run: |
+      ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 'mkdir -p /home/danilo/deploy'
 
+  - name: Enviar docker-compose.yml por SCP
+    run: |
+      scp -o StrictHostKeyChecking=no docker-compose.yml aluno@201.23.3.86:/home/danilo/deploy/
+
+  - name: Executar deploy remoto via SSH
+    run: |
+      ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 '
+        cd /home/danilo/deploy
+        docker-compose down
+        docker-compose pull
+        docker-compose up -d --build
+      '
