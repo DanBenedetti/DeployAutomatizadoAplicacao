@@ -49,7 +49,7 @@ jobs:
 
       - name: Subir SonarQube temporário no servidor remoto (com checagem)
         run: |
-          ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 '
+          ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 '
             docker stop sonartmp || true && docker rm sonartmp || true
             docker pull sonarqube:community
             docker run -d --name sonartmp -p 8088:9000 sonarqube:community
@@ -66,7 +66,7 @@ jobs:
           SONAR_USER: admin
           SONAR_PASS: admin
         run: |
-          ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 '
+          ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 '
             echo "Aguardando SonarQube atingir status 'UP'..."
             for i in {1..50}; do
               STATUS=$(curl -s -u "'$SONAR_USER':'$SONAR_PASS'" "http://localhost:8088/api/system/status" | jq -r .status)
@@ -84,7 +84,7 @@ jobs:
       - name: Criar token do admin via API REST
         id: get_sonar_token
         run: |
-          SONAR_TOKEN=$(ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 "curl -u admin:admin -X POST 'http://localhost:8088/api/user_tokens/generate?name=ci-token' | jq -r .token")
+          SONAR_TOKEN=$(ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 "curl -u admin:admin -X POST 'http://localhost:8088/api/user_tokens/generate?name=ci-token' | jq -r .token")
           echo "::add-mask::$SONAR_TOKEN"
           echo "SONAR_TOKEN=$SONAR_TOKEN" >> $GITHUB_ENV
 
@@ -101,7 +101,7 @@ jobs:
           sonar-scanner \
             -Dsonar.projectKey=danilo_crud_flask \
             -Dsonar.sources=. \
-            -Dsonar.host.url=http://13.68.97.186:8088 \
+            -Dsonar.host.url=http://201.23.3.86:8088 \
             -Dsonar.token=$SONAR_TOKEN
 
       - name: Instalar jq
@@ -115,27 +115,27 @@ jobs:
           echo "Aguardando Quality Gate..."
           sleep 10
           for i in {1..30}; do
-            QG=$(curl -u $SONAR_USER:$SONAR_PASS "http://13.68.97.186:8088/api/qualitygates/project_status?projectKey=danilo_crud_flask" | jq -r .projectStatus.status)
+            QG=$(curl -u $SONAR_USER:$SONAR_PASS "http://201.23.3.86:8088/api/qualitygates/project_status?projectKey=danilo_crud_flask" | jq -r .projectStatus.status)
             echo "Quality Gate: $QG"
             if [[ "$QG" == "OK" ]]; then exit 0; fi
             if [[ "$QG" == "ERROR" ]]; then echo "Quality Gate falhou"; exit 1; fi
             sleep 6
           done
           echo "Quality Gate não retornou status OK/ERROR a tempo"
-          ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 'docker logs sonartmp'
+          ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 'docker logs sonartmp'
           exit 1
 
       - name: Parar e remover SonarQube temporário (sempre executa)
         if: always()
         run: |
-          ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 '
+          ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 '
             docker stop sonartmp || true
             docker rm sonartmp || true
           '
 
       - name: Garantir que o diretório de deploy existe
         run: |
-          ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 'mkdir -p /home/danilopi/deploy'
+          ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 'mkdir -p /home/aluno/Danilo'
 
       - name: Gerar .env com secrets do GitHub
         run: |
@@ -149,19 +149,19 @@ jobs:
 
       - name: Enviar docker-compose.yml por SCP
         run: |
-          scp -o StrictHostKeyChecking=no docker-compose.yml danilopi@13.68.97.186:/home/danilopi/deploy/
+          scp -o StrictHostKeyChecking=no docker-compose.yml aluno@201.23.3.86:/home/aluno/Danilo/
 
       - name: Enviar .env para o servidor via SCP
         run: |
-          scp -o StrictHostKeyChecking=no .env danilopi@13.68.97.186:/home/danilopi/deploy/
+          scp -o StrictHostKeyChecking=no .env aluno@201.23.3.86:/home/aluno/Danilo/
 
       - name: Enviar código e Dockerfile para o servidor remoto
         run: |
-          scp -o StrictHostKeyChecking=no -r * danilopi@13.68.97.186:/home/danilopi/deploy/
+          scp -o StrictHostKeyChecking=no -r * aluno@201.23.3.86:/home/aluno/Danilo/
 
       - name: Executar deploy remoto via SSH
         run: |
-          ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 '
+          ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 '
             cd /home/danilopi/deploy
             docker compose down
             docker compose pull
