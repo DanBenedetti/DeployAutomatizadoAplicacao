@@ -137,9 +137,23 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 'mkdir -p /home/danilopi/deploy'
 
+      - name: Gerar .env com secrets do GitHub
+        run: |
+          cat > .env <<EOF
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
+          MYSQL_USER=${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+          EOF
+
+
       - name: Enviar docker-compose.yml por SCP
         run: |
           scp -o StrictHostKeyChecking=no docker-compose.yml danilopi@13.68.97.186:/home/danilopi/deploy/
+
+      - name: Enviar .env para o servidor via SCP
+        run: |
+          scp -o StrictHostKeyChecking=no .env danilopi@13.68.97.186:/home/danilopi/deploy/
 
       - name: Executar deploy remoto via SSH
         run: |
