@@ -81,6 +81,12 @@ jobs:
             docker logs sonartmp
             exit 1
           '
+      - name: Criar token do admin via API REST
+        id: get_sonar_token
+        run: |
+          SONAR_TOKEN=$(ssh -o StrictHostKeyChecking=no danilopi@13.68.97.186 "curl -u admin:admin -X POST 'http://localhost:8088/api/user_tokens/generate?name=ci-token' | jq -r .token")
+          echo "::add-mask::$SONAR_TOKEN"
+          echo "SONAR_TOKEN=$SONAR_TOKEN" >> $GITHUB_ENV
 
       - name: Instalar SonarScanner CLI
         run: |
@@ -89,16 +95,14 @@ jobs:
 
       - name: Rodar análise SonarScanner apontando para SonarQube remoto
         env:
-          SONAR_USER: admin
-          SONAR_PASS: admin
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
         run: |
           export PATH="$PWD/sonar-scanner-5.0.1.3006-linux/bin:$PATH"
           sonar-scanner \
             -Dsonar.projectKey=danilo_crud_flask \
             -Dsonar.sources=. \
             -Dsonar.host.url=http://13.68.97.186:8088 \
-            -Dsonar.login=$SONAR_USER \
-            -Dsonar.password=$SONAR_PASS
+            -Dsonar.token=$SONAR_TOKEN
 
       - name: Instalar jq
         run: sudo apt-get update && sudo apt-get install -y jq
