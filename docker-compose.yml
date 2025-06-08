@@ -1,35 +1,33 @@
 version: '3.7'
-
 services:
   db:
     image: mysql:8.0
     restart: unless-stopped
-    env_file:
+    envfile:
       - .env
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQLROOTPASSWORD: ${MYSQLROOTPASSWORD}
+      MYSQLDATABASE: ${MYSQLDATABASE}
+      MYSQLUSER: ${MYSQLUSER}
+      MYSQLPASSWORD: ${MYSQLPASSWORD}
     ports:
       - "8087:3306"
     volumes:
-      - db_data:/var/lib/mysql
+      - dbdata:/var/lib/mysql
       - ./db-init:/docker-entrypoint-initdb.d
-
-  web:
+web:
     build: .
     ports:
       - "8086:8086"
     environment:
-      MYSQL_HOST: db
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_DB: ${MYSQL_DATABASE}
-      MYSQL_PORT: 3306
+      MYSQLHOST: db
+      MYSQLUSER: ${MYSQLUSER}
+      MYSQLPASSWORD: ${MYSQLPASSWORD}
+      MYSQLDB: ${MYSQLDATABASE}
+      MYSQLPORT: 3306
+    depends_on:
       - db
     volumes:
       - .:/app
-
 volumes:
   db_data:
