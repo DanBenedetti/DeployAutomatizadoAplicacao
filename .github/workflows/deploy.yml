@@ -20,4 +20,5 @@ jobs:
       run: ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 'echo "Conexão ok pelo runner!"'
 
     - name: Enviar arquivo via SCP
-      run: scp -o StrictHostKeyChecking=no ./requeriments.txt aluno@201.23.3.86:/home/aluno/
+      run: scp -o StrictHostKeyChecking=no requirements.txt aluno@201.23.3.86:/home/aluno/
+
