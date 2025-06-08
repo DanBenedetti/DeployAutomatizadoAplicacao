@@ -6,22 +6,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-services:
-  db:
-    image: mysql:8.0
-    env:
-      MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-      MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
-      MYSQL_USER: ${{ secrets.MYSQL_USER }}
-      MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
-    ports:
-      - 8087:3306
-    options: --health-cmd="mysqladmin ping -h localhost" --health-interval=30s --health-timeout=10s --health-retries=5
-
-steps:
-  - name: Checkout código fonte
-    uses: actions/checkout@v4
-
+    services:
+      db:
+        image: mysql:8.0
+        env:
+          MYSQLROOTPASSWORD: ${{ secrets.MYSQLROOTPASSWORD }}
+          MYSQLDATABASE: ${{ secrets.MYSQLDATABASE }}
+          MYSQLUSER: ${{ secrets.MYSQLUSER }}
+          MYSQLPASSWORD: ${{ secrets.MYSQLPASSWORD }}
+        ports:
+          - 8087:3306
+        options: --health-cmd="mysqladmin ping -h localhost" --health-interval=30s --health-timeout=10s --health-retries=5
+    steps:
+      - name: Checkout código fonte
+        uses: actions/checkout@v4
   - name: Configurar QEMU (caso build multi-arquitetura)
     uses: docker/setup-qemu-action@v1
 
