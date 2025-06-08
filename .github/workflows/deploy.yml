@@ -13,7 +13,7 @@ services:
       MYSQL_USER: ${{ secrets.MYSQL_USER }}
       MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
     ports:
-      - 8087:3306
+      - 8087:8087
     options: &gt;-
       --health-cmd="mysqladmin ping -h localhost"
       --health-interval=30s
@@ -53,7 +53,7 @@ steps:
       script: |
         docker pull sonarqube:community
         docker stop sonartmp || true && docker rm sonartmp || true
-        docker run -d --name sonartmp -p 8088:9000 sonarqube:community
+        docker run -d --name sonartmp -p 8088:8088 sonarqube:community
 
   - name: Esperar SonarQube inicializar
     uses: appleboy/ssh-action@v0.1.0
@@ -65,7 +65,7 @@ steps:
       script: |
         echo "Aguardando SonarQube subir..."
         for i in {1..40}; do
-          if curl --fail http://localhost:9000/api/system/health | grep -q '"Health":"GREEN"'; then break; fi
+          if curl --fail http://localhost:8088/api/system/health | grep -q '"Health":"GREEN"'; then break; fi
           sleep 8
         done
         echo "SonarQube pronto!"
