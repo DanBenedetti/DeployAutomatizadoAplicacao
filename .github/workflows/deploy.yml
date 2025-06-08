@@ -139,7 +139,7 @@ jobs:
 
       - name: Enviar docker-compose.yml por SCP
         run: |
-          scp -o StrictHostKeyChecking=no docker-compose.yml aluno@201.23.3.86:/home/danilopi/deploy/
+          scp -o StrictHostKeyChecking=no docker-compose.yml danilo@13.68.97.186:/home/danilopi/deploy/
 
       - name: Executar deploy remoto via SSH
         run: |
