@@ -111,9 +111,6 @@ jobs:
             -Dsonar.host.url=http://201.23.3.86:8088 \
             -Dsonar.token=$SONAR_TOKEN
 
-      - name: Instalar jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
       - name: Validar Quality Gate do SonarQube remoto
         env:
           SONAR_USER: admin
