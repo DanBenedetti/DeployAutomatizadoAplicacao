@@ -111,6 +111,14 @@ jobs:
             -Dsonar.host.url=http://201.23.3.86:8088 \
             -Dsonar.token=$SONAR_TOKEN
 
+      - name: Instalar SonarScanner CLI
+        run: |
+          ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 '
+            wget -qO ~/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+            chmod +x ~/jq
+            export PATH=$HOME:$PATH            
+          '
+          
       - name: Validar Quality Gate do SonarQube remoto
         env:
           SONAR_USER: admin
