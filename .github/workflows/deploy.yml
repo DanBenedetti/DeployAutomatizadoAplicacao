@@ -139,7 +139,7 @@ jobs:
             sleep 10 # Pode ajustar este sleep se necessário
 
             # Loop para verificar o status do Quality Gate - Aumentado o número de tentativas
-            for i in {1..60}; do # &lt;-- ALTERADO DE {1..30} PARA {1..60}
+            for i in {1..90}; do # <-- ALTERADO DE {1..60} PARA {1..90}
               # Usa o caminho absoluto para o jq no comando curl
               QG=$(curl -s -u "$SONAR_USER:$SONAR_PASS" "http://201.23.3.86:8088/api/qualitygates/project_status?projectKey=danilo_crud_flask" | "$JQ_PATH" -r .projectStatus.status)
               echo "Quality Gate: $QG"
