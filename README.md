@@ -117,7 +117,7 @@ Deploy: envio do docker-compose.yml e reload das imagens
 
 ⚡ Exemplo de Uso dos Principais Comandos
 
-    Build manual:
+    Build manual: docker-compose down; docker-compose pull; docker-compose up -d --build
 
 bash
 Copiar
