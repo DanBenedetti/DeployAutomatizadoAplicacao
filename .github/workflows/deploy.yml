@@ -124,48 +124,23 @@ jobs:
             -Dsonar.host.url=http://201.23.3.86:8088 \
             -Dsonar.token=$SONAR_TOKEN
 
-      - name: Wait for SonarQube Quality Gate
+      - name: Validar Quality Gate do SonarQube remoto
         env:
-          SONAR_USER: admin # Considere usar secrets aqui também
-          SONAR_PASS: admin # Considere usar secrets aqui também
+          SONAR_USER: admin
+          SONAR_PASS: admin
         run: |
-          ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 '
-            # Este bloco inteiro será executado no servidor remoto (201.23.3.86)
-
-            # Define o caminho absoluto para o jq
-            JQ_PATH="/home/aluno/jq"
-
-            echo "Aguardando Quality Gate..."
-            sleep 10 # Pode ajustar este sleep se necessário
-
-            # Loop para verificar o status do Quality Gate - Aumentado o número de tentativas
-            for i in {1..90}; do # <-- ALTERADO DE {1..60} PARA {1..90}
-              # Usa o caminho absoluto para o jq no comando curl
-              QG=$(curl -s -u "$SONAR_USER:$SONAR_PASS" "http://201.23.3.86:8088/api/qualitygates/project_status?projectKey=danilo_crud_flask" | "$JQ_PATH" -r .projectStatus.status)
-              echo "Quality Gate: $QG"
-
-              # Verifica o status e sai se for OK ou ERROR
-              if [[ "$QG" == "OK" ]]; then
-                echo "Quality Gate aprovado!"
-                exit 0 # Sai com sucesso
-              fi
-              if [[ "$QG" == "ERROR" ]]; then
-                echo "Quality Gate falhou!"
-                # Opcional: Pegar logs do SonarQube Compute Engine para diagnóstico
-                docker logs sonartmp # Descomente se quiser ver os logs em caso de falha
-                exit 1 # Sai com falha
-              fi
-
-              # Espera antes da próxima tentativa
-              sleep 6 # Espera de 6 segundos entre as tentativas
-            done
-
-            # Se o loop terminar sem sucesso ou falha
-            echo "Quality Gate não retornou status OK/ERROR a tempo após várias tentativas."
-            # Pega os logs do container SonarQube no server remoto para ajudar no debug
-            docker logs sonartmp
-            exit 1 # Sai com falha
-          '
+          echo "Aguardando Quality Gate..."
+          sleep 10
+          for i in {1..30}; do
+            QG=$(curl -u $SONAR_USER:$SONAR_PASS "http://201.23.3.86:8088/api/qualitygates/project_status?projectKey=danilo_crud_flask" | jq -r .projectStatus.status)
+            echo "Quality Gate: $QG"
+            if [[ "$QG" == "OK" ]]; then exit 0; fi
+            if [[ "$QG" == "ERROR" ]]; then echo "Quality Gate falhou"; exit 1; fi
+            sleep 6
+          done
+          echo "Quality Gate não retornou status OK/ERROR a tempo"
+          ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 'docker logs sonartmp'
+          exit 1
 
       - name: Parar e remover SonarQube temporário (sempre executa)
         if: always()
