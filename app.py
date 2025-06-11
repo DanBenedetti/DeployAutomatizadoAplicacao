@@ -6,17 +6,15 @@ from datetime import date
 import os
 
 app = Flask(__name__)
-app.secret_key = 'umsegredoforteaqui'  # Altere para sua chave de sessão forte
+app.secret_key = 'umsegredoforteaqui' 
 
 # Função para converter TIME (timedelta) do MySQL para "HH:MM"
 def formatar_horario_mysql(time_value):
     if time_value is None:
         return ""
     try:
-        # Se já for string, apenas retorna os 5 primeiros caracteres
         if isinstance(time_value, str):
             return time_value[:5]
-        # Se for timedelta: converte para HH:MM
         total_seconds = int(time_value.total_seconds())
         horas = total_seconds // 3600
         minutos = (total_seconds % 3600) // 60
@@ -208,13 +206,13 @@ def meus_agendamentos():
 # Rota para excluir agendamentos
 @app.route('/excluir_agendamento/<int:id>')
 def excluir_agendamento(id):
-    # Adapta para que só apague se o agendamento for do cliente logado
+
     if 'cliente_id' not in session:
         flash('Por favor, faça login para excluir agendamentos.', 'danger')
         return redirect(url_for('login'))
 
     cur = mysql.connection.cursor()
-    # Opcional: só deixa excluir se agendamento pertence ao cliente
+
     cur.execute("DELETE FROM agendamentos WHERE id = %s AND cliente_id = %s", (id, session['cliente_id']))
     mysql.connection.commit()
     cur.close()
@@ -229,7 +227,6 @@ def alterar_agendamento(id):
         return redirect(url_for('login'))
 
     cur = mysql.connection.cursor()
-    # Pega o agendamento do cliente logado
     cur.execute("SELECT servico, data, horario FROM agendamentos WHERE id = %s AND cliente_id = %s", (id, session['cliente_id']))
     ag = cur.fetchone()
 

@@ -13,8 +13,7 @@ Este projeto é uma aplicação CRUD desenvolvida em Python Flask com banco de d
     Docker & Docker Compose
     GitHub Actions
     SonarQube
-    appleboy/ssh-action
-    appleboy/scp-action
+
 
 ⚙️ Estrutura dos Principais Arquivos
 ├── app.py
@@ -29,7 +28,9 @@ Este projeto é uma aplicação CRUD desenvolvida em Python Flask com banco de d
 
 ├── deploy.yml
 
-└── README.md
+├── README.md
+
+└── requeriments.txt
 
 app.py: Código principal do Flask.
 
@@ -75,6 +76,9 @@ docker-compose up -d --build
 
     O MySQL estará na porta 8087
 
+    O SonarQybe estará na porta 8088
+
+
 🧪 Pipeline CI/CD (GitHub Actions)
 
 O pipeline realiza:
@@ -102,7 +106,7 @@ Deploy: envio do docker-compose.yml e reload das imagens
 
 🎯 Restrições Especiais
 
-    SOMENTE as portas 8086–8091 são utilizadas externamente:
+    SOMENTE as portas 8086–8088 são utilizadas externamente:
         App Flask: 8086
         MySQL: 8087
         SonarQube temporário (pipeline): 8088
@@ -113,16 +117,16 @@ Deploy: envio do docker-compose.yml e reload das imagens
 
     MySQL: acesso no host/server via porta 8087
 
-    SonarQube: só é iniciado temporariamente pela pipeline (não roda permanentemente)
+    SonarQube: só é iniciado temporariamente pela pipeline (não roda permanentemente) via porta 8088
 
 ⚡ Exemplo de Uso dos Principais Comandos
 
-    Build manual: docker-compose down; docker-compose pull; docker-compose up -d --build
-
+    Build manual: 
+    
 bash
 Copiar
 
-    docker build -t danilobenedetti/app_crud_flask:latest .
+     docker-compose down; docker-compose pull; docker-compose up -d --build
 
     Subir serviço:
 
@@ -147,5 +151,8 @@ Copiar
 🙋‍♂️ Dúvidas/Fale comigo
 
 Em caso de dúvidas, sugestões ou problemas, abra uma issue ou entre em contato!
+
+danilo.ribeiro22@fatec.sp.gov.br
+danilobenedetti@yahoo.com.br
 
 2025 © Danilo Benedetti
